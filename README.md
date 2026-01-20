@@ -1,44 +1,66 @@
-# نظام إدارة الدورات والحضور بالباركود
+# 📚 نظام إدارة الدورات (Barcode App)
 
-نظام ويب لإدارة الدورات التدريبية وتسجيل الحضور عبر مسح الباركود (QR Code).
+نظام لإدارة الدورات التدريبية مع توليد باركود QR للتسجيل عبر الجوال.
 
-## المميزات
+## 🛠️ التقنيات
 
-- ✅ إدارة الدورات (إضافة/تعديل/حذف)
-- ✅ توليد باركود QR فريد لكل دورة
-- ✅ صفحة تسجيل حضور عامة
-- ✅ منع التسجيل المتكرر من نفس الجهاز
-- ✅ لوحة تحكم محمية بتسجيل دخول
-- ✅ تصدير بيانات الحضور CSV
+- **Next.js 16** - إطار العمل
+- **TypeScript** - لغة البرمجة
+- **Prisma 6** - ORM قاعدة البيانات
+- **PostgreSQL (Neon)** - قاعدة البيانات السحابية
+- **NextAuth.js** - نظام المصادقة
+- **Vercel** - الاستضافة
 
-## التقنيات
-
-- Next.js 16
-- TypeScript
-- Prisma + SQLite
-- NextAuth.js
-- QR Code Generation
-
-## التشغيل محلياً
+## 🚀 التشغيل المحلي
 
 ```bash
+# تثبيت المكتبات
 npm install
-npx prisma generate
+
+# إعداد قاعدة البيانات
 npx prisma db push
+
+# إضافة مستخدم Admin
 npx prisma db seed
+
+# تشغيل السيرفر
 npm run dev
 ```
 
-## بيانات الدخول الافتراضية
+## 🔐 بيانات الدخول الافتراضية
 
-- **اسم المستخدم:** admin
-- **كلمة المرور:** admin123
+- **اسم المستخدم:** `admin`
+- **كلمة المرور:** `admin123`
 
-## متغيرات البيئة
+## 🌐 متغيرات البيئة
+
+أنشئ ملف `.env` بالمحتوى التالي:
 
 ```env
-DATABASE_URL="file:./data/dev.db"
+DATABASE_URL="postgresql://user:pass@host/db?sslmode=require"
 NEXTAUTH_SECRET="your-secret-key"
-NEXTAUTH_URL="https://your-domain.railway.app"
-NEXT_PUBLIC_BASE_URL="https://your-domain.railway.app"
+NEXTAUTH_URL="http://localhost:3000"
 ```
+
+## 📱 الميزات
+
+- ✅ إدارة الدورات (إضافة/تعديل/حذف)
+- ✅ توليد باركود QR للتسجيل
+- ✅ تسجيل الحضور عبر الجوال
+- ✅ التحكم بعدد التسجيلات من كل جهاز
+- ✅ تصدير بيانات الحضور
+- ✅ لوحة تحكم إحصائية
+
+## 📋 الأوامر المفيدة
+
+```bash
+npm run dev          # تشغيل محلياً
+npm run build        # بناء للإنتاج
+npx prisma studio    # عرض قاعدة البيانات
+npx prisma db push   # مزامنة الجداول
+```
+
+## 🔗 الروابط
+
+- **الموقع:** https://barcodeappv4.vercel.app
+- **GitHub:** https://github.com/omarmfza1-glitch/barcodeappv4
