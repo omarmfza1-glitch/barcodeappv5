@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
-import * as XLSX from 'xlsx'
 import styles from './attendees.module.css'
 
 interface Attendee {
@@ -50,6 +49,7 @@ export default function AttendeesPage() {
     const [showForm, setShowForm] = useState(false)
     const [editingAttendee, setEditingAttendee] = useState<Attendee | null>(null)
     const [formData, setFormData] = useState(emptyAttendee)
+    const [exporting, setExporting] = useState(false)
 
     useEffect(() => {
         fetchCourse()
@@ -141,7 +141,8 @@ export default function AttendeesPage() {
         })
     }
 
-    const buildCourseInfoSheet = () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const buildCourseInfoSheet = (XLSX: any) => {
         const courseInfo = [
             ['اسم الدورة', course!.name],
             ['التاريخ', formatDate(course!.startDate)],
@@ -155,61 +156,73 @@ export default function AttendeesPage() {
         return wsInfo
     }
 
-    const exportNamesOnly = () => {
+    const exportNamesOnly = async () => {
         if (!course) return
+        setExporting(true)
+        try {
+            const XLSX = await import('xlsx')
 
-        const data = course.attendees.map((a, index) => ({
-            '#': index + 1,
-            'الاسم الكامل': `${a.firstName} ${a.secondName} ${a.thirdName} ${a.lastName}`,
-        }))
+            const data = course.attendees.map((a, index) => ({
+                '#': index + 1,
+                'الاسم الكامل': `${a.firstName} ${a.secondName} ${a.thirdName} ${a.lastName}`,
+            }))
 
-        const ws = XLSX.utils.json_to_sheet(data)
-        ws['!cols'] = [{ wch: 5 }, { wch: 40 }]
+            const ws = XLSX.utils.json_to_sheet(data)
+            ws['!cols'] = [{ wch: 5 }, { wch: 40 }]
 
-        const wb = XLSX.utils.book_new()
-        XLSX.utils.book_append_sheet(wb, buildCourseInfoSheet(), 'معلومات الدورة')
-        XLSX.utils.book_append_sheet(wb, ws, 'أسماء الحضور')
-        XLSX.writeFile(wb, `أسماء-${course.name}.xlsx`)
+            const wb = XLSX.utils.book_new()
+            XLSX.utils.book_append_sheet(wb, buildCourseInfoSheet(XLSX), 'معلومات الدورة')
+            XLSX.utils.book_append_sheet(wb, ws, 'أسماء الحضور')
+            XLSX.writeFile(wb, `أسماء-${course.name}.xlsx`)
+        } finally {
+            setExporting(false)
+        }
     }
 
-    const exportFullData = () => {
+    const exportFullData = async () => {
         if (!course) return
+        setExporting(true)
+        try {
+            const XLSX = await import('xlsx')
 
-        const data = course.attendees.map((a, index) => ({
-            '#': index + 1,
-            'رقم الهوية': a.nationalId,
-            'الاسم الكامل': `${a.firstName} ${a.secondName} ${a.thirdName} ${a.lastName}`,
-            'الاسم الأول': a.firstName,
-            'الاسم الثاني': a.secondName,
-            'الاسم الثالث': a.thirdName,
-            'الاسم الأخير': a.lastName,
-            'رقم الجوال': a.phone,
-            'رقم الحاسب': a.computerNumber || '',
-            'المسمى الوظيفي': a.jobTitle,
-            'مكان العمل': a.workplace,
-            'تاريخ التسجيل': formatDate(a.createdAt),
-        }))
+            const data = course.attendees.map((a, index) => ({
+                '#': index + 1,
+                'رقم الهوية': a.nationalId,
+                'الاسم الكامل': `${a.firstName} ${a.secondName} ${a.thirdName} ${a.lastName}`,
+                'الاسم الأول': a.firstName,
+                'الاسم الثاني': a.secondName,
+                'الاسم الثالث': a.thirdName,
+                'الاسم الأخير': a.lastName,
+                'رقم الجوال': a.phone,
+                'رقم الحاسب': a.computerNumber || '',
+                'المسمى الوظيفي': a.jobTitle,
+                'مكان العمل': a.workplace,
+                'تاريخ التسجيل': formatDate(a.createdAt),
+            }))
 
-        const ws = XLSX.utils.json_to_sheet(data)
-        ws['!cols'] = [
-            { wch: 5 },
-            { wch: 15 },
-            { wch: 35 },
-            { wch: 12 },
-            { wch: 12 },
-            { wch: 12 },
-            { wch: 12 },
-            { wch: 15 },
-            { wch: 12 },
-            { wch: 22 },
-            { wch: 22 },
-            { wch: 25 },
-        ]
+            const ws = XLSX.utils.json_to_sheet(data)
+            ws['!cols'] = [
+                { wch: 5 },
+                { wch: 15 },
+                { wch: 35 },
+                { wch: 12 },
+                { wch: 12 },
+                { wch: 12 },
+                { wch: 12 },
+                { wch: 15 },
+                { wch: 12 },
+                { wch: 22 },
+                { wch: 22 },
+                { wch: 25 },
+            ]
 
-        const wb = XLSX.utils.book_new()
-        XLSX.utils.book_append_sheet(wb, buildCourseInfoSheet(), 'معلومات الدورة')
-        XLSX.utils.book_append_sheet(wb, ws, 'قائمة الحضور')
-        XLSX.writeFile(wb, `حضور-${course.name}.xlsx`)
+            const wb = XLSX.utils.book_new()
+            XLSX.utils.book_append_sheet(wb, buildCourseInfoSheet(XLSX), 'معلومات الدورة')
+            XLSX.utils.book_append_sheet(wb, ws, 'قائمة الحضور')
+            XLSX.writeFile(wb, `حضور-${course.name}.xlsx`)
+        } finally {
+            setExporting(false)
+        }
     }
 
     if (loading) {
@@ -232,11 +245,11 @@ export default function AttendeesPage() {
                     <button onClick={() => setShowForm(true)} className={styles.addBtn}>
                         ➕ إضافة يدوي
                     </button>
-                    <button onClick={exportNamesOnly} className={styles.exportNamesBtn} disabled={course.attendees.length === 0}>
-                        📋 الأسماء فقط
+                    <button onClick={exportNamesOnly} className={styles.exportNamesBtn} disabled={course.attendees.length === 0 || exporting}>
+                        {exporting ? '⏳ جاري التصدير...' : '📋 الأسماء فقط'}
                     </button>
-                    <button onClick={exportFullData} className={styles.exportBtn} disabled={course.attendees.length === 0}>
-                        📊 كامل البيانات
+                    <button onClick={exportFullData} className={styles.exportBtn} disabled={course.attendees.length === 0 || exporting}>
+                        {exporting ? '⏳ جاري التصدير...' : '📊 كامل البيانات'}
                     </button>
                 </div>
             </div>
