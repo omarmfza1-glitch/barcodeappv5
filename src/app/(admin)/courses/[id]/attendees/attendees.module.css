@@ -81,6 +81,29 @@
     cursor: not-allowed;
 }
 
+.exportNamesBtn {
+    background: var(--primary-dark);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.exportNamesBtn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(13, 148, 136, 0.3);
+}
+
+.exportNamesBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 .courseInfo {
     background: white;
     border-radius: 20px;

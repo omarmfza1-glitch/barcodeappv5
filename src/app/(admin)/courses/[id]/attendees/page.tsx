@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
+import * as XLSX from 'xlsx'
 import styles from './attendees.module.css'
 
 interface Attendee {
@@ -140,30 +141,75 @@ export default function AttendeesPage() {
         })
     }
 
-    const exportToCSV = () => {
+    const buildCourseInfoSheet = () => {
+        const courseInfo = [
+            ['اسم الدورة', course!.name],
+            ['التاريخ', formatDate(course!.startDate)],
+            ['المدة', course!.duration],
+            ['المكان', course!.location],
+            ['المحاضرون', course!.instructors],
+            ['عدد الحضور', course!.attendees.length],
+        ]
+        const wsInfo = XLSX.utils.aoa_to_sheet(courseInfo)
+        wsInfo['!cols'] = [{ wch: 15 }, { wch: 35 }]
+        return wsInfo
+    }
+
+    const exportNamesOnly = () => {
         if (!course) return
 
-        const headers = ['رقم الهوية', 'الاسم الأول', 'الاسم الثاني', 'الاسم الثالث', 'الاسم الأخير', 'رقم الجوال', 'رقم الحاسب', 'المسمى الوظيفي', 'مكان العمل', 'تاريخ التسجيل']
-        const rows = course.attendees.map(a => [
-            a.nationalId,
-            a.firstName,
-            a.secondName,
-            a.thirdName,
-            a.lastName,
-            a.phone,
-            a.computerNumber || '',
-            a.jobTitle,
-            a.workplace,
-            formatDate(a.createdAt)
-        ])
+        const data = course.attendees.map((a, index) => ({
+            '#': index + 1,
+            'الاسم الكامل': `${a.firstName} ${a.secondName} ${a.thirdName} ${a.lastName}`,
+        }))
 
-        const csvContent = '\uFEFF' + [headers, ...rows].map(row => row.join(',')).join('\n')
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-        const url = URL.createObjectURL(blob)
-        const link = document.createElement('a')
-        link.href = url
-        link.download = `attendees-${course.name}.csv`
-        link.click()
+        const ws = XLSX.utils.json_to_sheet(data)
+        ws['!cols'] = [{ wch: 5 }, { wch: 40 }]
+
+        const wb = XLSX.utils.book_new()
+        XLSX.utils.book_append_sheet(wb, buildCourseInfoSheet(), 'معلومات الدورة')
+        XLSX.utils.book_append_sheet(wb, ws, 'أسماء الحضور')
+        XLSX.writeFile(wb, `أسماء-${course.name}.xlsx`)
+    }
+
+    const exportFullData = () => {
+        if (!course) return
+
+        const data = course.attendees.map((a, index) => ({
+            '#': index + 1,
+            'رقم الهوية': a.nationalId,
+            'الاسم الكامل': `${a.firstName} ${a.secondName} ${a.thirdName} ${a.lastName}`,
+            'الاسم الأول': a.firstName,
+            'الاسم الثاني': a.secondName,
+            'الاسم الثالث': a.thirdName,
+            'الاسم الأخير': a.lastName,
+            'رقم الجوال': a.phone,
+            'رقم الحاسب': a.computerNumber || '',
+            'المسمى الوظيفي': a.jobTitle,
+            'مكان العمل': a.workplace,
+            'تاريخ التسجيل': formatDate(a.createdAt),
+        }))
+
+        const ws = XLSX.utils.json_to_sheet(data)
+        ws['!cols'] = [
+            { wch: 5 },
+            { wch: 15 },
+            { wch: 35 },
+            { wch: 12 },
+            { wch: 12 },
+            { wch: 12 },
+            { wch: 12 },
+            { wch: 15 },
+            { wch: 12 },
+            { wch: 22 },
+            { wch: 22 },
+            { wch: 25 },
+        ]
+
+        const wb = XLSX.utils.book_new()
+        XLSX.utils.book_append_sheet(wb, buildCourseInfoSheet(), 'معلومات الدورة')
+        XLSX.utils.book_append_sheet(wb, ws, 'قائمة الحضور')
+        XLSX.writeFile(wb, `حضور-${course.name}.xlsx`)
     }
 
     if (loading) {
@@ -186,8 +232,11 @@ export default function AttendeesPage() {
                     <button onClick={() => setShowForm(true)} className={styles.addBtn}>
                         ➕ إضافة يدوي
                     </button>
-                    <button onClick={exportToCSV} className={styles.exportBtn} disabled={course.attendees.length === 0}>
-                        📥 تصدير CSV
+                    <button onClick={exportNamesOnly} className={styles.exportNamesBtn} disabled={course.attendees.length === 0}>
+                        📋 الأسماء فقط
+                    </button>
+                    <button onClick={exportFullData} className={styles.exportBtn} disabled={course.attendees.length === 0}>
+                        📊 كامل البيانات
                     </button>
                 </div>
             </div>
